@@ -1,6 +1,8 @@
+mod io;
 mod shader;
-mod simple;
-use simple::Simple2DView;
+mod view;
+use view::simple::Simple2DView;
+use view::View;
 use winit::{
     keyboard::{Key, NamedKey},
     platform::modifier_supplement::KeyEventExtModifierSupplement,
@@ -14,8 +16,16 @@ fn main() {
         .with_title("image viewer")
         .build(&event_loop);
 
+    let image = io::load_image3d(std::path::Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/assets/"
+    )));
+
     let mut view = Simple2DView::new(&display);
-    view.set_image(&display, include_bytes!("../assets/opengl.png"));
+    view.set_image(
+        &display,
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/opengl.png")),
+    );
 
     event_loop
         .run(move |event, window_target| match event {

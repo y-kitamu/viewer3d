@@ -18,17 +18,42 @@ macro_rules! shader {
     ($stem:literal) => {
         ShaderSrc {
             stem: $stem,
-            vertex: include_str!(concat!("../shader/", $stem, ".vs")),
-            fragment: include_str!(concat!("../shader/", $stem, ".fs")),
+            vertex: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader/",
+                $stem,
+                ".vs"
+            )),
+            fragment: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader/",
+                $stem,
+                ".fs"
+            )),
             geometry: None,
         }
     };
     ($stem:literal, geometry) => {
         ShaderSrc {
             stem: $stem,
-            vertex: include_str!(concat!("../shader/", $stem, ".vs")),
-            fragment: include_str!(concat!("../shader/", $stem, ".fs")),
-            geometry: Some(include_str!(concat!("../shader/", $stem, ".gs"))),
+            vertex: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader/",
+                $stem,
+                ".vs"
+            )),
+            fragment: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader/",
+                $stem,
+                ".fs"
+            )),
+            geometry: Some(include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/shader/",
+                $stem,
+                ".gs"
+            ))),
         }
     };
 }

@@ -79,8 +79,11 @@ impl Simple2DView {
             prev_mouse_pos: None,
         }
     }
+}
 
-    pub fn set_image(&mut self, display: &glium::Display<WindowSurface>, image: &[u8]) {
+impl super::View for Simple2DView {
+    fn set_image(&mut self, display: &glium::Display<WindowSurface>, data_path: &std::path::Path) {
+        let image = std::fs::read(data_path).unwrap();
         let image = image::load(std::io::Cursor::new(image), image::ImageFormat::Png)
             .unwrap()
             .to_rgba8();
@@ -90,7 +93,7 @@ impl Simple2DView {
         self.texture = glium::Texture2d::new(display, image).unwrap();
     }
 
-    pub fn draw(&self, display: &glium::Display<WindowSurface>) {
+    fn draw(&self, display: &glium::Display<WindowSurface>) {
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         let perspective = {
@@ -121,7 +124,7 @@ impl Simple2DView {
         target.finish().unwrap();
     }
 
-    pub fn handle_keyboard_input(
+    fn handle_keyboard_input(
         &mut self,
         _display: &glium::Display<WindowSurface>,
         event: &winit::event::KeyEvent,
@@ -129,7 +132,7 @@ impl Simple2DView {
         println!("{:?}", event);
     }
 
-    pub fn handle_modifiers_changed(
+    fn handle_modifiers_changed(
         &mut self,
         _display: &glium::Display<WindowSurface>,
         modifiers: &winit::event::Modifiers,
@@ -138,7 +141,7 @@ impl Simple2DView {
             modifiers.state() & ModifiersState::SHIFT == ModifiersState::SHIFT;
     }
 
-    pub fn handle_mouse_input(
+    fn handle_mouse_input(
         &mut self,
         _display: &glium::Display<WindowSurface>,
         state: &ElementState,
@@ -152,7 +155,7 @@ impl Simple2DView {
         }
     }
 
-    pub fn handle_cursor_moved(
+    fn handle_cursor_moved(
         &mut self,
         display: &glium::Display<WindowSurface>,
         position: &PhysicalPosition<f64>,
@@ -171,7 +174,7 @@ impl Simple2DView {
         }
     }
 
-    pub fn handle_mouse_wheel(
+    fn handle_mouse_wheel(
         &mut self,
         _display: &glium::Display<WindowSurface>,
         delta: &MouseScrollDelta,
