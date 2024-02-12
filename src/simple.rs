@@ -4,6 +4,7 @@ use glium::Surface;
 use glium::{implement_vertex, uniform};
 use winit::dpi::PhysicalPosition;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase};
+use winit::keyboard::ModifiersState;
 
 use crate::shader;
 use crate::shader::ShaderSrc;
@@ -19,6 +20,11 @@ pub struct Simple2DView {
     vertex_buffer: glium::VertexBuffer<SimpleVertex>,
     program: glium::Program,
     texture: glium::texture::Texture2d,
+    matrix: [[f32; 4]; 4],
+    is_left_button_pressed: bool,
+    is_right_button_pressed: bool,
+    is_shift_button_pressed: bool,
+    prev_mouse_pos: Option<PhysicalPosition<f64>>,
 }
 
 impl Simple2DView {
@@ -61,6 +67,16 @@ impl Simple2DView {
             vertex_buffer,
             program,
             texture: glium::texture::Texture2d::empty(display, 0, 0).unwrap(),
+            matrix: [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            is_left_button_pressed: false,
+            is_right_button_pressed: false,
+            is_shift_button_pressed: false,
+            prev_mouse_pos: None,
         }
     }
 
@@ -80,8 +96,7 @@ impl Simple2DView {
         let perspective = {
             let (width, height) = target.get_dimensions();
             let aspect_ratio = height as f32 / width as f32;
-            let fov: f32 = 3.141592 / 3.0;
-            let f = 1.0 / (fov / 2.0).tan();
+            let f = 1.0;
             [
                 [f * aspect_ratio, 0.0, 0.0, 0.0],
                 [0.0, f, 0.0, 0.0],
@@ -92,12 +107,7 @@ impl Simple2DView {
         let uniforms = uniform! {
             tex: &self.texture,
             perspective: perspective,
-            model: [
-                [1.0, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 1.0, 0.0],
-                [0.0, 0.0, 0.0, 1.0f32],
-            ],
+            model: self.matrix,
         };
         target
             .draw(
@@ -113,22 +123,67 @@ impl Simple2DView {
 
     pub fn handle_keyboard_input(
         &mut self,
+        _display: &glium::Display<WindowSurface>,
         event: &winit::event::KeyEvent,
-        display: &glium::Display<WindowSurface>,
-        window_target: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
         println!("{:?}", event);
     }
 
-    pub fn handle_mouse_input(&mut self, state: &ElementState, button: &MouseButton) {
+    pub fn handle_modifiers_changed(
+        &mut self,
+        _display: &glium::Display<WindowSurface>,
+        modifiers: &winit::event::Modifiers,
+    ) {
+        self.is_shift_button_pressed =
+            modifiers.state() & ModifiersState::SHIFT == ModifiersState::SHIFT;
+    }
+
+    pub fn handle_mouse_input(
+        &mut self,
+        _display: &glium::Display<WindowSurface>,
+        state: &ElementState,
+        button: &MouseButton,
+    ) {
         println!("{:?} {:?}", state, button);
+        match button {
+            MouseButton::Left => self.is_left_button_pressed = state == &ElementState::Pressed,
+            MouseButton::Right => self.is_right_button_pressed = state == &ElementState::Pressed,
+            _ => (),
+        }
     }
 
-    pub fn handle_cursor_moved(&mut self, position: &PhysicalPosition<f64>) {
-        println!("{:?}", position);
+    pub fn handle_cursor_moved(
+        &mut self,
+        display: &glium::Display<WindowSurface>,
+        position: &PhysicalPosition<f64>,
+    ) {
+        let (_, height) = display.get_framebuffer_dimensions();
+        if self.is_left_button_pressed {
+            if let Some(prev) = self.prev_mouse_pos {
+                let dx = (position.x - prev.x) / height as f64 * 2.0;
+                let dy = -(position.y - prev.y) / height as f64 * 2.0;
+                self.matrix[3][0] += dx as f32;
+                self.matrix[3][1] += dy as f32;
+            }
+            self.prev_mouse_pos = Some(*position);
+        } else {
+            self.prev_mouse_pos = None;
+        }
     }
 
-    pub fn handle_mouse_wheel(&mut self, delta: &MouseScrollDelta, phase: &TouchPhase) {
-        println!("{:?} {:?}", delta, phase);
+    pub fn handle_mouse_wheel(
+        &mut self,
+        _display: &glium::Display<WindowSurface>,
+        delta: &MouseScrollDelta,
+        _phase: &TouchPhase,
+    ) {
+        if self.is_shift_button_pressed {
+            let scale = match delta {
+                MouseScrollDelta::LineDelta(_, y) => 1.0 + y / 10.0,
+                MouseScrollDelta::PixelDelta(_) => 1.0,
+            };
+            self.matrix[0][0] *= scale as f32;
+            self.matrix[1][1] *= scale as f32;
+        }
     }
 }
