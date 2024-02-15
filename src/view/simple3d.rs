@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use glium;
 use glium::glutin::surface::WindowSurface;
 use glium::Surface;

@@ -10,7 +10,7 @@ pub struct Image3D {
 
 fn reverse_endianness(data: &Vec<u8>, step: usize) -> Vec<u8> {
     let mut reversed = Vec::new();
-    for i in (0..data.len()).step_by(step) {
+    for i in (0..data.len() - 3).step_by(step) {
         reversed.push(data[i + 3]);
         reversed.push(data[i + 2]);
         reversed.push(data[i + 1]);
@@ -20,7 +20,9 @@ fn reverse_endianness(data: &Vec<u8>, step: usize) -> Vec<u8> {
 }
 
 pub fn load_image3d(data_path: &Path) -> Image3D {
-    if data_path.ends_with("nii.gz") || data_path.ends_with("hdr.gz") {
+    println!("Loading image from {:?}", data_path);
+    let stem = data_path.file_name().unwrap().to_str().unwrap();
+    if &stem[stem.len() - 6..] == "nii.gz" || &stem[stem.len() - 6..] == "hdr.gz" {
         let obj = nifti::ReaderOptions::new().read_file(data_path).unwrap();
         let header = obj.header();
         let dim = header.dim;
