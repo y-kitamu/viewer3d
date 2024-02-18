@@ -22,7 +22,7 @@ pub fn load_image3d(data_path: &Path) -> Image3D {
         let spacing = header.pixdim;
         let data = obj
             .into_volume()
-            .into_ndarray()
+            .into_ndarray::<i16>()
             .unwrap()
             .map(|x: &i16| *x as f32)
             .into_raw_vec();

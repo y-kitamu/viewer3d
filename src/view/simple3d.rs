@@ -109,7 +109,7 @@ impl super::View for Simple3DView {
                 None => glium::texture::Texture3d::with_mipmaps(display, image, image3d.mipmaps)
                     .unwrap(),
             };
-            self.z_index = self.texture.get_depth().unwrap() / 2;
+            self.z_index = 0; //self.texture.get_depth().unwrap() / 2;
         }
     }
 
@@ -127,9 +127,14 @@ impl super::View for Simple3DView {
                 [0.0, 0.0, 0.0, 1.0],
             ]
         };
+        let behavior = glium::uniforms::SamplerBehavior {
+            minify_filter: glium::uniforms::MinifySamplerFilter::Nearest,
+            magnify_filter: glium::uniforms::MagnifySamplerFilter::Nearest,
+            ..Default::default()
+        };
         let uniforms = uniform! {
-            z_index: self.z_index as i32,
-            tex: &self.texture,
+            z_index: self.z_index as f32 / self.texture.get_depth().unwrap() as f32,
+            tex: glium::uniforms::Sampler(&self.texture, behavior),
             perspective: perspective,
             model: self.matrix,
         };
@@ -217,7 +222,6 @@ impl super::View for Simple3DView {
             self.z_index = (z_index as i32)
                 .max(0)
                 .min(self.texture.get_depth().unwrap() as i32) as u32;
-            println!("z_index : {}", self.z_index);
         }
     }
 }
