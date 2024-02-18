@@ -8,4 +8,7 @@ uniform sampler3D tex;
 
 void main() {
     color = texture(tex, vec3(v_tex_coords, z_index));
+    color.gb = vec2(color.r, color.r);
+    color /= 1000.0;
+    color.a = 1.0;
 }

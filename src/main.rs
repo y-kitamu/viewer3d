@@ -49,6 +49,7 @@ fn main() {
     let mut view_mode = ViewMode {
         current_view: 0,
         views: vec![Box::new(view3d), Box::new(view2d)],
+        // views: vec![Box::new(view2d)],
     };
 
     event_loop

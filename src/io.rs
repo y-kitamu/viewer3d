@@ -1,22 +1,15 @@
 use std::path::Path;
 
-use nifti::NiftiObject;
+use glium::texture::{MipmapsOption, UncompressedFloatFormat};
+use image::EncodableLayout;
+use nifti::{IntoNdArray, NiftiObject};
 
 pub struct Image3D {
-    pub data: Vec<u8>,
+    pub data: Vec<f32>,
     pub shape: (u32, u32, u32),
     pub spacing: (f32, f32, f32),
-}
-
-fn reverse_endianness(data: &Vec<u8>, step: usize) -> Vec<u8> {
-    let mut reversed = Vec::new();
-    for i in (0..data.len() - 3).step_by(step) {
-        reversed.push(data[i + 3]);
-        reversed.push(data[i + 2]);
-        reversed.push(data[i + 1]);
-        reversed.push(data[i]);
-    }
-    reversed
+    pub format: Option<UncompressedFloatFormat>,
+    pub mipmaps: MipmapsOption,
 }
 
 pub fn load_image3d(data_path: &Path) -> Image3D {
@@ -27,25 +20,46 @@ pub fn load_image3d(data_path: &Path) -> Image3D {
         let header = obj.header();
         let dim = header.dim;
         let spacing = header.pixdim;
-        let endianness = header.endianness;
-        let mut data = obj.into_volume().into_raw_data();
-
-        if endianness == nifti::Endianness::Little {
-            data = reverse_endianness(&data, 2);
-        }
-
-        println!(
-            "dim : {:?}, spacing : {:?}, endianness : {:?}",
-            &dim[1..4],
-            &spacing[1..4],
-            endianness
-        );
+        let data = obj
+            .into_volume()
+            .into_ndarray()
+            .unwrap()
+            .map(|x: &i16| *x as f32)
+            .into_raw_vec();
 
         Image3D {
             data,
             shape: (dim[1] as u32, dim[2] as u32, dim[3] as u32),
             spacing: (spacing[1], spacing[2], spacing[3]),
+            format: Some(UncompressedFloatFormat::F32),
+            mipmaps: MipmapsOption::NoMipmap,
         }
+    } else {
+        panic!("Unsupported file format");
+    }
+}
+
+use image;
+use image::{ImageBuffer, Rgba};
+use ndarray::prelude::*;
+use ndarray::{Array, ArrayD, IxDyn};
+
+pub fn load_image_slice(data_path: &Path) -> ImageBuffer<Rgba<f32>, Vec<f32>> {
+    println!("Loading image from {:?}", data_path);
+    let stem = data_path.file_name().unwrap().to_str().unwrap();
+    if &stem[stem.len() - 6..] == "nii.gz" || &stem[stem.len() - 6..] == "hdr.gz" {
+        let obj = nifti::ReaderOptions::new().read_file(data_path).unwrap();
+        let header = obj.header();
+        let dim = header.dim;
+        let spacing = header.pixdim;
+        let endianness = header.endianness;
+        let data: ArrayD<i16> = obj.into_volume().into_ndarray().unwrap();
+
+        image::ImageBuffer::from_fn(dim[1] as u32, dim[2] as u32, |x, y| {
+            let pixel = data[[x as usize, y as usize, 100]] as f32;
+            let pixel = pixel as f32;
+            Rgba([pixel, pixel, pixel, 1.0f32])
+        })
     } else {
         panic!("Unsupported file format");
     }

@@ -1,5 +1,6 @@
 use glium;
 use glium::glutin::surface::WindowSurface;
+use glium::texture::{MipmapsOption, UncompressedFloatFormat};
 use glium::Surface;
 use glium::{implement_vertex, uniform};
 use winit::dpi::PhysicalPosition;
@@ -87,10 +88,29 @@ impl super::View for Simple2DView {
         let image = image::load(std::io::Cursor::new(image), image::ImageFormat::Png)
             .unwrap()
             .to_rgba8();
+        // let data_path = std::path::Path::new(concat!(
+        //     env!("CARGO_MANIFEST_DIR"),
+        //     "/data/cas/1-200/1.img.nii.gz"
+        // ));
+        // let image = crate::io::load_image_slice(data_path);
+        println!(
+            "Image shape : {:?}, data len : {}",
+            image.dimensions(),
+            image.len()
+        );
+
         let image_dimensions = image.dimensions();
         let image =
             glium::texture::RawImage2d::from_raw_rgba_reversed(&image.into_raw(), image_dimensions);
-        self.texture = glium::Texture2d::new(display, image).unwrap();
+        println!("image client format : {:?}", image.format);
+        self.texture = glium::Texture2d::with_format(
+            display,
+            image,
+            UncompressedFloatFormat::F32F32F32F32,
+            MipmapsOption::NoMipmap,
+        )
+        .unwrap();
+        println!("texture : {:?}", self.texture);
     }
 
     fn draw(&self, display: &glium::Display<WindowSurface>) {

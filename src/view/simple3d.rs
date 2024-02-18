@@ -21,10 +21,12 @@ pub struct Simple3DView {
     program: glium::Program,
     texture: glium::texture::Texture3d,
     matrix: [[f32; 4]; 4],
+    z_index: u32,
     is_left_button_pressed: bool,
     is_right_button_pressed: bool,
     is_shift_button_pressed: bool,
     prev_mouse_pos: Option<PhysicalPosition<f64>>,
+    image: Option<crate::io::Image3D>,
 }
 
 impl Simple3DView {
@@ -73,25 +75,42 @@ impl Simple3DView {
                 [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
+            z_index: 0,
             is_left_button_pressed: false,
             is_right_button_pressed: false,
             is_shift_button_pressed: false,
             prev_mouse_pos: None,
+            image: None,
         }
     }
 }
 
 impl super::View for Simple3DView {
     fn set_image(&mut self, display: &glium::Display<WindowSurface>, data_path: &std::path::Path) {
-        let image = crate::io::load_image3d(data_path);
-        let image = glium::texture::RawImage3d {
-            data: std::borrow::Cow::Borrowed(&image.data),
-            width: image.shape.0,
-            height: image.shape.1,
-            depth: image.shape.2,
-            format: glium::texture::ClientFormat::I16,
-        };
-        self.texture = glium::texture::Texture3d::new(display, image).unwrap();
+        self.image = Some(crate::io::load_image3d(data_path));
+        if let Some(image3d) = &self.image {
+            println!(
+                "Image shape : {:?}, data len : {}",
+                image3d.shape,
+                image3d.data.len()
+            );
+            let image = glium::texture::RawImage3d {
+                data: std::borrow::Cow::Borrowed(&image3d.data),
+                width: image3d.shape.0,
+                height: image3d.shape.1,
+                depth: image3d.shape.2,
+                format: glium::texture::ClientFormat::F32,
+            };
+            self.texture = match image3d.format {
+                Some(format) => {
+                    glium::texture::Texture3d::with_format(display, image, format, image3d.mipmaps)
+                        .unwrap()
+                }
+                None => glium::texture::Texture3d::with_mipmaps(display, image, image3d.mipmaps)
+                    .unwrap(),
+            };
+            self.z_index = self.texture.get_depth().unwrap() / 2;
+        }
     }
 
     fn draw(&self, display: &glium::Display<WindowSurface>) {
@@ -109,6 +128,7 @@ impl super::View for Simple3DView {
             ]
         };
         let uniforms = uniform! {
+            z_index: self.z_index as i32,
             tex: &self.texture,
             perspective: perspective,
             model: self.matrix,
@@ -188,6 +208,16 @@ impl super::View for Simple3DView {
             };
             self.matrix[0][0] *= scale as f32;
             self.matrix[1][1] *= scale as f32;
+        } else {
+            let z_index = self.z_index as f32;
+            let z_index = match delta {
+                MouseScrollDelta::LineDelta(_, y) => z_index + y,
+                MouseScrollDelta::PixelDelta(_) => z_index,
+            };
+            self.z_index = (z_index as i32)
+                .max(0)
+                .min(self.texture.get_depth().unwrap() as i32) as u32;
+            println!("z_index : {}", self.z_index);
         }
     }
 }
