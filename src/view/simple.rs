@@ -88,11 +88,6 @@ impl super::View for Simple2DView {
         let image = image::load(std::io::Cursor::new(image), image::ImageFormat::Png)
             .unwrap()
             .to_rgba8();
-        // let data_path = std::path::Path::new(concat!(
-        //     env!("CARGO_MANIFEST_DIR"),
-        //     "/data/cas/1-200/1.img.nii.gz"
-        // ));
-        // let image = crate::io::load_image_slice(data_path);
         println!(
             "Image shape : {:?}, data len : {}",
             image.dimensions(),
@@ -110,7 +105,6 @@ impl super::View for Simple2DView {
             MipmapsOption::NoMipmap,
         )
         .unwrap();
-        println!("texture : {:?}", self.texture);
     }
 
     fn draw(&self, display: &glium::Display<WindowSurface>) {
@@ -208,5 +202,12 @@ impl super::View for Simple2DView {
             self.matrix[0][0] *= scale as f32;
             self.matrix[1][1] *= scale as f32;
         }
+    }
+
+    fn handle_window_resized(
+        &mut self,
+        display: &glium::Display<WindowSurface>,
+        window_size: winit::dpi::PhysicalSize<u32>,
+    ) {
     }
 }

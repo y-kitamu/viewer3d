@@ -15,6 +15,14 @@ struct ViewMode {
 }
 
 impl ViewMode {
+    fn set_2d_view(&mut self) {
+        self.current_view = 1;
+    }
+
+    fn set_3d_view(&mut self) {
+        self.current_view = 0;
+    }
+
     fn get_view(&self) -> &Box<dyn View> {
         &self.views[self.current_view]
     }
@@ -28,34 +36,36 @@ fn main() {
     let event_loop = winit::event_loop::EventLoopBuilder::new()
         .build()
         .expect("Event loop building");
+    // event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
     let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
         .with_title("image viewer")
         .build(&event_loop);
 
-    let mut view2d = Simple2DView::new(&display);
-    view2d.set_image(
-        &display,
-        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/opengl.png")),
-    );
-    let mut view3d = Simple3DView::new(&display);
-    view3d.set_image(
-        &display,
-        std::path::Path::new(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/data/cas/1-200/1.img.nii.gz"
-        )),
-    );
+    let view2d = Simple2DView::new(&display);
+    let view3d = Simple3DView::new(&display);
 
     let mut view_mode = ViewMode {
         current_view: 0,
         views: vec![Box::new(view3d), Box::new(view2d)],
-        // views: vec![Box::new(view2d)],
     };
 
     event_loop
         .run(move |event, window_target| match event {
             winit::event::Event::WindowEvent { event, .. } => match event {
                 winit::event::WindowEvent::CloseRequested => window_target.exit(),
+                winit::event::WindowEvent::DroppedFile(path) => {
+                    println!("dropped file: {:?}", path);
+                    match path.extension() {
+                        Some(ext) => match ext.to_ascii_lowercase().to_str().unwrap() {
+                            "png" | "jpg" | "jpeg" => {
+                                view_mode.set_2d_view();
+                            }
+                            _ => view_mode.set_3d_view(),
+                        },
+                        None => (),
+                    }
+                    view_mode.get_view_mut().set_image(&display, &path);
+                }
                 winit::event::WindowEvent::KeyboardInput { event, .. } => {
                     match event.key_without_modifiers().as_ref() {
                         Key::Named(NamedKey::Escape) => window_target.exit(),
@@ -89,6 +99,9 @@ fn main() {
                 }
                 winit::event::WindowEvent::Resized(window_size) => {
                     display.resize(window_size.into());
+                    view_mode
+                        .get_view_mut()
+                        .handle_window_resized(&display, window_size);
                 }
                 _ => (),
             },

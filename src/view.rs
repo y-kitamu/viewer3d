@@ -34,6 +34,11 @@ pub trait View {
         delta: &MouseScrollDelta,
         phase: &TouchPhase,
     );
+    fn handle_window_resized(
+        &mut self,
+        display: &glium::Display<WindowSurface>,
+        window_size: winit::dpi::PhysicalSize<u32>,
+    );
 }
 
 pub mod simple;
