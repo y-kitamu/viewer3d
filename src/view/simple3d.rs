@@ -357,7 +357,7 @@ impl super::View for Simple3DView {
         } else {
             let index = self.current_pos[self.axis as usize] as f32;
             let index = match delta {
-                MouseScrollDelta::LineDelta(_, y) => index + y,
+                MouseScrollDelta::LineDelta(_, y) => index + y.abs().ceil() * y.signum(),
                 MouseScrollDelta::PixelDelta(_) => index,
             };
             let max = match self.axis {
