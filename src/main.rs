@@ -23,9 +23,9 @@ impl ViewMode {
         self.current_view = 0;
     }
 
-    fn get_view(&self) -> &Box<dyn View> {
-        &self.views[self.current_view]
-    }
+    // fn get_view(&self) -> &Box<dyn View> {
+    //     &self.views[self.current_view]
+    // }
 
     fn get_view_mut(&mut self) -> &mut Box<dyn View> {
         &mut self.views[self.current_view]

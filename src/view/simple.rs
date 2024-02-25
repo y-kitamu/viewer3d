@@ -206,8 +206,8 @@ impl super::View for Simple2DView {
 
     fn handle_window_resized(
         &mut self,
-        display: &glium::Display<WindowSurface>,
-        window_size: winit::dpi::PhysicalSize<u32>,
+        _display: &glium::Display<WindowSurface>,
+        _window_size: winit::dpi::PhysicalSize<u32>,
     ) {
     }
 }

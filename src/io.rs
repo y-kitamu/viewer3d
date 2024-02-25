@@ -2,7 +2,6 @@ use std::fmt;
 use std::path::Path;
 
 use glium::texture::{MipmapsOption, UncompressedFloatFormat};
-use image::EncodableLayout;
 use nifti::{IntoNdArray, NiftiObject};
 
 pub struct Image3D {
@@ -78,28 +77,28 @@ pub fn load_image3d(data_path: &Path) -> Image3D {
     }
 }
 
-use image;
-use image::{ImageBuffer, Rgba};
-use ndarray::prelude::*;
-use ndarray::{Array, ArrayD, IxDyn};
+// use image;
+// use image::{ImageBuffer, Rgba};
+// use ndarray::prelude::*;
+// use ndarray::{Array, ArrayD, IxDyn};
 
-pub fn load_image_slice(data_path: &Path) -> ImageBuffer<Rgba<f32>, Vec<f32>> {
-    println!("Loading image from {:?}", data_path);
-    let stem = data_path.file_name().unwrap().to_str().unwrap();
-    if &stem[stem.len() - 6..] == "nii.gz" || &stem[stem.len() - 6..] == "hdr.gz" {
-        let obj = nifti::ReaderOptions::new().read_file(data_path).unwrap();
-        let header = obj.header();
-        let dim = header.dim;
-        let spacing = header.pixdim;
-        let endianness = header.endianness;
-        let data: ArrayD<i16> = obj.into_volume().into_ndarray().unwrap();
+// pub fn load_image_slice(data_path: &Path) -> ImageBuffer<Rgba<f32>, Vec<f32>> {
+//     println!("Loading image from {:?}", data_path);
+//     let stem = data_path.file_name().unwrap().to_str().unwrap();
+//     if &stem[stem.len() - 6..] == "nii.gz" || &stem[stem.len() - 6..] == "hdr.gz" {
+//         let obj = nifti::ReaderOptions::new().read_file(data_path).unwrap();
+//         let header = obj.header();
+//         let dim = header.dim;
+//         let spacing = header.pixdim;
+//         let endianness = header.endianness;
+//         let data: ArrayD<i16> = obj.into_volume().into_ndarray().unwrap();
 
-        image::ImageBuffer::from_fn(dim[1] as u32, dim[2] as u32, |x, y| {
-            let pixel = data[[x as usize, y as usize, 100]] as f32;
-            let pixel = pixel as f32;
-            Rgba([pixel, pixel, pixel, 1.0f32])
-        })
-    } else {
-        panic!("Unsupported file format");
-    }
-}
+//         image::ImageBuffer::from_fn(dim[1] as u32, dim[2] as u32, |x, y| {
+//             let pixel = data[[x as usize, y as usize, 100]] as f32;
+//             let pixel = pixel as f32;
+//             Rgba([pixel, pixel, pixel, 1.0f32])
+//         })
+//     } else {
+//         panic!("Unsupported file format");
+//     }
+// }
