@@ -84,12 +84,16 @@ impl Texture {
             }
         }
         self.texture = match image.format {
-            Some(format) => {
-                glium::texture::Texture3d::with_format(display, image3d, format, image.mipmaps)
-                    .unwrap()
-            }
+            Some(format) => glium::texture::Texture3d::with_format(
+                display,
+                image3d,
+                format,
+                image.mipmaps.unwrap(),
+            )
+            .unwrap(),
             None => {
-                glium::texture::Texture3d::with_mipmaps(display, image3d, image.mipmaps).unwrap()
+                glium::texture::Texture3d::with_mipmaps(display, image3d, image.mipmaps.unwrap())
+                    .unwrap()
             }
         };
         self.image = Some(image);

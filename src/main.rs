@@ -32,9 +32,33 @@ impl ViewMode {
     }
 }
 
+fn serialize_image(nii_file_path: &std::path::Path, output_dir: &std::path::Path) {
+    if !output_dir.exists() {
+        info!("Creating directory: {:?}", output_dir);
+        std::fs::create_dir_all(output_dir).unwrap();
+    }
+    let stem = nii_file_path.file_name().unwrap().to_str().unwrap();
+    let output_file = if &stem[stem.len() - 4..] == ".nii" {
+        output_dir.join(format!("{}.raw", &stem[..stem.len() - 4]))
+    } else {
+        output_dir.join(format!("{}.raw", &stem[..stem.len() - 7]))
+    };
+    io::load_image3d(nii_file_path).serialize(&output_file);
+}
+
 fn main() {
     tracing_subscriber::fmt::init();
     info!("Starting image viewer");
+
+    if false {
+        // test serialize
+        let nii_file_path = std::path::Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/data/cas/1-200/1.img.nii"
+        ));
+        let output_dir = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/data/cas/raw"));
+        serialize_image(nii_file_path, output_dir);
+    }
 
     let event_loop = winit::event_loop::EventLoopBuilder::new()
         .build()
