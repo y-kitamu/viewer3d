@@ -3,6 +3,7 @@ use glium;
 use glium::glutin::surface::WindowSurface;
 use glium::Surface;
 use glium::{implement_vertex, uniform};
+use tracing::info;
 use winit::dpi::PhysicalPosition;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, TouchPhase};
 use winit::keyboard::ModifiersState;
@@ -181,7 +182,7 @@ impl Simple3DView {
 impl super::View for Simple3DView {
     fn set_image(&mut self, display: &glium::Display<WindowSurface>, data_path: &std::path::Path) {
         let image3d = crate::io::load_image3d(data_path);
-        println!(
+        info!(
             "Image shape : {:?}, data len : {}, spacing : {:?}",
             image3d.shape,
             image3d.data.len(),
@@ -201,6 +202,7 @@ impl super::View for Simple3DView {
             }
             self.image.set_image(display, image3d, self.axis);
         }
+        info!("Image loaded");
     }
 
     fn draw(&self, display: &glium::Display<WindowSurface>) {

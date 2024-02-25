@@ -3,6 +3,7 @@ use std::path::Path;
 
 use glium::texture::{MipmapsOption, UncompressedFloatFormat};
 use nifti::{IntoNdArray, NiftiObject};
+use tracing::{debug, info};
 
 pub struct Image3D {
     pub data: Vec<f32>,
@@ -26,10 +27,12 @@ impl fmt::Debug for Image3D {
 }
 
 pub fn load_image3d(data_path: &Path) -> Image3D {
-    println!("Loading image from {:?}", data_path);
+    info!("Loading image from {:?}", data_path);
     let stem = data_path.file_name().unwrap().to_str().unwrap();
     if &stem[stem.len() - 6..] == "nii.gz" || &stem[stem.len() - 6..] == "hdr.gz" {
+        debug!("Loading nifti file");
         let obj = nifti::ReaderOptions::new().read_file(data_path).unwrap();
+        debug!("Loaded nifti file");
         let header = obj.header();
         let dim = header.dim;
         let spacing = header.pixdim;

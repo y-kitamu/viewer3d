@@ -1,6 +1,8 @@
 mod io;
 mod shader;
 mod view;
+use tracing::info;
+use tracing_subscriber;
 use view::simple::Simple2DView;
 use view::simple3d::Simple3DView;
 use view::View;
@@ -16,16 +18,14 @@ struct ViewMode {
 
 impl ViewMode {
     fn set_2d_view(&mut self) {
+        info!("Set current view to 2D");
         self.current_view = 1;
     }
 
     fn set_3d_view(&mut self) {
+        info!("Set current view to 3D");
         self.current_view = 0;
     }
-
-    // fn get_view(&self) -> &Box<dyn View> {
-    //     &self.views[self.current_view]
-    // }
 
     fn get_view_mut(&mut self) -> &mut Box<dyn View> {
         &mut self.views[self.current_view]
@@ -33,6 +33,9 @@ impl ViewMode {
 }
 
 fn main() {
+    tracing_subscriber::fmt::init();
+    info!("Starting image viewer");
+
     let event_loop = winit::event_loop::EventLoopBuilder::new()
         .build()
         .expect("Event loop building");
@@ -54,7 +57,7 @@ fn main() {
             winit::event::Event::WindowEvent { event, .. } => match event {
                 winit::event::WindowEvent::CloseRequested => window_target.exit(),
                 winit::event::WindowEvent::DroppedFile(path) => {
-                    println!("dropped file: {:?}", path);
+                    info!("dropped file: {:?}", path);
                     match path.extension() {
                         Some(ext) => match ext.to_ascii_lowercase().to_str().unwrap() {
                             "png" | "jpg" | "jpeg" => {
